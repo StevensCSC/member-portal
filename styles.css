@@ -1,0 +1,16 @@
+.voteBox {
+  float: left;
+  width: 5%;
+  text-align: center;
+}
+
+.suggestionInfo {
+  float: left;
+  width: 95%;
+}
+
+.suggestion {
+  padding-bottom: 10px;
+  overflow: hidden;
+  width: 100%;
+}
