@@ -1,7 +1,10 @@
-var express    = require('express');
-var session    = require('express-session');
-var GitHubApi  = require('github');
-var $          = require('jquery');
+import express from 'express';
+import session from 'express-session';
+import GitHubApi from 'github';
+import $ from 'jquery';
+import ReactServer from 'react-dom/server';
+import React from 'react';
+import ReactDOM from 'react-dom';
 
 let app = express();
 
@@ -21,6 +24,8 @@ app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   next();
 });
+
+app.use(express.static('public'));
 
 app.use(session({
   secret: "blah",
