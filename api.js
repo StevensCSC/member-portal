@@ -33,4 +33,13 @@ export default class ServerAPI {
     });
   }
 
+  static userPermissions(onSuccess, onFailure) {
+    $.get({
+      url: "http://localhost:3000/" + "userPermissions",
+      xhrFields: { withCredentials: true },
+      success: (data) => onSuccess(data),
+      error: (data) => onFailure(data)
+    });
+  }
+
 }

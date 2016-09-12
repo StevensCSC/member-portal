@@ -1,10 +1,10 @@
 import express from 'express';
 import session from 'express-session';
 import GitHubApi from 'github';
-import $ from 'jquery';
 import ReactServer from 'react-dom/server';
 import React from 'react';
 import ReactDOM from 'react-dom';
+import request from 'request';
 
 let app = express();
 
@@ -25,13 +25,13 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use(express.static('public'));
-
 app.use(session({
   secret: "blah",
   resave: true,
   saveUninitialized: true
 }));
+
+app.use(express.static('./public'));
 
 app.get('/:id/upvote', function (req, res) {
   let id = req.params.id;
@@ -65,20 +65,60 @@ app.post('/submit', function(req, res) {
 });
 
 app.get('/callback', function(req, res) {
-  console.log('GitHub callback');
-  $.post({
-    url: 'https://github.com/login/oauth/access_token',
-    dataType: 'json',
-    data: {
-      client_id: process.env['GITHUB_CLIENTID'],
-      client_secret: process.env['GITHUB_SECRET'],
-      code: req.code
+  request.post('https://github.com/login/oauth/access_token',
+    {
+      json: {
+        client_id: process.env.GH_CLIENT_ID,
+        client_secret: process.env.GH_CLIENT_SECRET,
+        code: req.query.code
+      }
     },
-    success: (data) => {
-      req.session.accessToken = data.gitHubAccessToken
-      res.end('{}');
+    function (error, response, body) {
+      if (!error && response.statusCode === 200) {
+        req.session.accessToken = body.access_token;
+        console.log('Got access token: ' + req.session.accessToken);
+        github.authenticate({
+          type: 'oauth',
+          token: req.session.accessToken
+        });
+        console.log('authenticated');
+        github.users.get({}, function (err, usersReponse) {
+          console.log('got user: ' + usersReponse.login);
+          req.session.ghUser = usersReponse.login;
+          res.redirect('/');
+        });
+      } else {
+        res.redirect('/');
+      }
     }
-  });
+  );
+});
+
+app.get('/userPermissions', function(req, res) {
+  if (req.session.accessToken) {
+    github.authenticate({
+      type: 'oauth',
+      token: req.session.accessToken
+    });
+    github.orgs.checkMembership({
+      org: "StevensCSC",
+      user: req.session.ghUser
+    }, function (err, membershipRes) {
+      if (err) {
+        res.json({
+          userLoggedIn: false
+        });
+      } else {
+         res.json({
+          userLoggedIn: true
+        });
+      }
+    });
+  } else {
+    req.json({
+      userLoggedIn: false
+    });
+  }
 });
 
 app.listen('3000', function() {
