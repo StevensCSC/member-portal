@@ -53,4 +53,13 @@ export default class ServerAPI {
     });
   }
 
+  static logout(onSuccess, onFailure) {
+    $.get({
+      url: API_URL + "logout",
+      xhrFields: { withCredentials: true },
+      success: (data) => onSuccess(data),
+      error: (data) => onFailure(data)
+    });
+  }
+
 }

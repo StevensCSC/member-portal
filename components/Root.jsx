@@ -1,4 +1,5 @@
 import SuggestionBox from './SuggestionBox.jsx'
+import NavBar from './NavBar.jsx'
 import React from 'react'
 import API from '../api.js'
 
@@ -62,6 +63,20 @@ export default class Root extends React.Component {
       }
     }
 
+    this.logout = () => {
+      API.logout(
+        (data) => {
+          this.setState({
+            loginStatus: LOGIN_STATUS.LOGGED_OUT,
+            suggestions: []
+          });
+        },
+        (err) => {
+
+        }
+      );
+    }
+
   }
 
   componentDidMount () {
@@ -77,7 +92,7 @@ export default class Root extends React.Component {
     );
   }
 
-  render() {
+  getMainContent () {
     if (this.state.loginStatus === LOGIN_STATUS.LOGGED_IN) {
       return <SuggestionBox onSuggestionSubmit={this.onSuggestionSubmit} handleVoteChange={this.handleVoteChange} suggestions={this.state.suggestions} />;
     } else if (this.state.loginStatus === LOGIN_STATUS.NOT_IN_ORG) {
@@ -85,6 +100,15 @@ export default class Root extends React.Component {
     } else {
       return <a href="https://github.com/login/oauth/authorize?scope=read:org&client_id=0ffffd652180d6e16381">Log in first!</a>;
     }
+  }
+
+  render() {
+    return (
+      <div className="react-root">
+        <NavBar loginStatus={this.state.loginStatus} logout={this.logout} />
+        {this.getMainContent()}
+      </div>
+    );
   }
 
 }

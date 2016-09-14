@@ -10,7 +10,6 @@ import * as db from './db.js';
 let app = express();
 
 let github = new GitHubApi({
-  debug: true,
   protocol: 'https',
   host: 'api.github.com',
   headers: {
@@ -68,7 +67,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/:id/upvote', function (req, res) {
   let id = req.params.id;
-  console.log('Upvote id ' + id);
+  console.log('User ' + req.session.ghUser + ' upvoting suggestion #' + id);
   db.upvoteSuggestionForUser(id, req.session.ghUser)
     .then((result) => {
       res.json(result);
@@ -80,7 +79,7 @@ app.get('/:id/upvote', function (req, res) {
 
 app.get('/:id/resetVote', function (req, res) {
   let id = req.params.id;
-  console.log('Reset id ' + id);
+  console.log('User ' + req.session.ghUser + ' reseting vote for suggestion #' + id);
   db.resetVoteSuggestionForUser(id, req.session.ghUser)
     .then((result) => {
       res.json(result);
@@ -91,11 +90,9 @@ app.get('/:id/resetVote', function (req, res) {
 });
 
 app.post('/submit', function(req, res) {
-  console.log('Submit, body: ' + JSON.stringify(req.body));
-  console.log('session: ' + JSON.stringify(req.session));
+  console.log('User ' + req.session.ghUser + ' submitting suggestion: ' + JSON.stringify(req.body));
   let suggestion = req.body;
   if (suggestion.title && suggestion.desc && suggestion.link) {
-    console.log('In if');
     suggestion.suggester = req.session.ghUser;
     db.createSuggestion(suggestion)
       .then((val) => {
@@ -112,6 +109,7 @@ app.post('/submit', function(req, res) {
 });
 
 app.get('/getSuggestionsForCurrentUser', function(req, res) {
+  console.log('Loading suggestions for ' + req.session.ghUser);
   db.getSuggestionsForUser(req.session.ghUser)
     .then((result) => {
       res.json(result);
@@ -134,14 +132,11 @@ app.get('/callback', function(req, res) {
     function (error, response, body) {
       if (!error && response.statusCode === 200) {
         req.session.accessToken = body.access_token;
-        console.log('Got access token: ' + req.session.accessToken);
         github.authenticate({
           type: 'oauth',
           token: req.session.accessToken
         });
-        console.log('authenticated');
         github.users.get({}, function (err, usersReponse) {
-          console.log('got user: ' + usersReponse.login);
           req.session.ghUser = usersReponse.login;
           res.redirect('/');
         });
@@ -150,6 +145,12 @@ app.get('/callback', function(req, res) {
       }
     }
   );
+});
+
+app.get('/logout', function(req, res) {
+  console.log('Logging out user ' + req.session.ghUser);
+  req.session.destroy();
+  res.end('Logged out');
 });
 
 app.listen('3000', function() {

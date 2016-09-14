@@ -20,7 +20,6 @@ export function createSuggestion(suggestion, then, err) {
         client.sadd("suggestion:" + suggestion_id + ":votes", suggestion.suggester);
         getSuggestionsForUser(suggestion.suggester)
           .then((result) => {
-            console.log("Got suggestions for " + suggestion.suggester + ", result: " + JSON.stringify(result));
             resolve(result);
           })
           .catch((err) => {
@@ -38,21 +37,18 @@ export function getSuggestionsForUser(user) {
   return new Promise((resolve, reject) => {
     client.smembers('suggestions', (err, results) => {
       if (!err) {
-        console.log("results: " + JSON.stringify(results));
         let suggestionPromises = results.map((suggestionId) => {
           return client.hgetallAsync(suggestionId);
         });
 
         Promise.all(suggestionPromises)
           .then((suggestions) => {
-            console.log("suggestions: " + JSON.stringify(suggestions));
             let suggestionWithCountPromises = suggestions.map((suggestion) => {
               return new Promise((resolve, reject) => {
                 client.scardAsync("suggestion:" + suggestion.id + ":votes")
                   .then((voteCount) => {
                     client.sismemberAsync("suggestion:" + suggestion.id + ":votes", user)
                       .then((userUpvoted) => {
-                        console.log('voteCount: ' + voteCount);
                         suggestion.voteCount = voteCount;
                         suggestion.userUpvoted = userUpvoted == 1;
                         resolve(suggestion);
