@@ -38,33 +38,35 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/:id/upvote', function (req, res) {
-  if (req.session.userLoggedIn) {
+  if (req.session.userLoggedIn && req.session.ghUser) {
     let id = req.params.id;
     console.log('Upvote id ' + id);
-    console.log('Session id ' + req.sessionID);
-
-    if (!req.session.votes) {
-      req.session.votes = 0;
-    }
-    req.session.votes = req.session.votes + 1;
-    console.log('Session upvotes ' + req.session.votes);
+    db.upvoteSuggestionForUser(id, req.session.ghUser)
+      .then((result) => {
+        res.json(result);
+      })
+      .catch((err) => {
+        res.end('{}');
+      });
+  } else {
+    res.end('{}');
   }
-  res.end('{}');
 });
 
 app.get('/:id/resetVote', function (req, res) {
-  if (req.session.userLoggedIn) {
+  if (req.session.userLoggedIn && req.session.ghUser) {
     let id = req.params.id;
     console.log('Reset id ' + id);
-    console.log('Session id ' + req.sessionID);
-
-    if (!req.session.resets) {
-      req.session.resets = 0;
-    }
-    req.session.resets = req.session.resets + 1;
-    console.log('Session resets ' + req.session.resets);
+    db.resetVoteSuggestionForUser(id, req.session.ghUser)
+      .then((result) => {
+        res.json(result);
+      })
+      .catch((err) => {
+        res.end('{}');
+      });
+  } else {
+    res.end('{}');
   }
-  res.end('{}');
 });
 
 app.post('/submit', function(req, res) {

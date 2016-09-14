@@ -27,13 +27,19 @@ export default class SuggestionBox extends React.Component {
       if (upvote) {
         API.upvote(
             id,
-            (data) => console.log(data),
+            (data) => {
+              console.log(data);
+              this.setState({ data: data });
+            },
             (data) => console.log('Failed to upvote suggestion')
         );
       } else {
         API.resetVote(
             id,
-            (data) => console.log(data),
+            (data) => {
+              console.log(data);
+              this.setState({ data: data });
+            },
             (data) => console.log('Failed to reset suggestion')
         );
       }

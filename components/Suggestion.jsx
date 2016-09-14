@@ -7,7 +7,7 @@ export default class Suggestion extends React.Component {
     return (
       <div className="suggestion">
         <div className="voteBox">
-          <button type="button" className={upvoteArrowClass} onClick={() => this.props.handleVoteChange(this.props.id, !this.props.upvoted)}>^</button>
+          <button type="button" className={upvoteArrowClass} onClick={() => this.props.handleVoteChange(this.props.id, !this.props.userUpvoted)}>^</button>
           <div className="voteCount">{ this.props.voteCount }</div>
         </div>
         <div className="suggestionInfo">

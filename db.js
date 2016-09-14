@@ -50,10 +50,11 @@ export function getSuggestionsForUser(user) {
               return new Promise((resolve, reject) => {
                 client.scardAsync("suggestion:" + suggestion.id + ":votes")
                   .then((voteCount) => {
-                    client.sismemberAsync("suggestion:" + suggestion.id + "votes", suggestion.suggester)
+                    client.sismemberAsync("suggestion:" + suggestion.id + ":votes", suggestion.suggester)
                       .then((userUpvoted) => {
+                        console.log('voteCount: ' + voteCount);
                         suggestion.voteCount = voteCount;
-                        suggestion.userUpvoted = userUpvoted;
+                        suggestion.userUpvoted = userUpvoted == 1;
                         resolve(suggestion);
                       })
                       .catch((err) => {
@@ -81,5 +82,41 @@ export function getSuggestionsForUser(user) {
         reject(err);
       }
     });
+  });
+}
+
+export function upvoteSuggestionForUser(suggestionId, user) {
+  return new Promise((resolve, reject) => {
+    client.saddAsync('suggestion:' + suggestionId + ':votes', user)
+      .then((result) => {
+        getSuggestionsForUser(user)
+          .then((suggestions) => {
+            resolve(suggestions);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      })
+      .catch((err) => {
+        reject(err);
+      });
+  });
+}
+
+export function resetVoteSuggestionForUser(suggestionId, user) {
+   return new Promise((resolve, reject) => {
+    client.sremAsync('suggestion:' + suggestionId + ':votes', user)
+      .then((result) => {
+        getSuggestionsForUser(user)
+          .then((suggestions) => {
+            resolve(suggestions);
+          })
+          .catch((err) => {
+            reject(err);
+          });
+      })
+      .catch((err) => {
+        reject(err);
+      });
   });
 }
