@@ -11,7 +11,7 @@ export default class Suggestion extends React.Component {
           <div className="voteCount">{ this.props.voteCount }</div>
         </div>
         <div className="suggestionInfo">
-          <a href={ this.props.link }>{ this.props.title }</a>
+          <a target="_blank" href={ this.props.link }>{ this.props.title }</a>
           <p>{ this.props.desc }</p>
         </div>
       </div>

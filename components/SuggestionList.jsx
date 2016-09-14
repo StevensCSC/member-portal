@@ -6,7 +6,7 @@ export default class SuggestionList extends React.Component {
   render() {
     var that = this;
 
-    var suggestionNodes = this.props.data.map(function (suggestion) {
+    var suggestionNodes = this.props.suggestions.map(function (suggestion) {
       return (
         <Suggestion
           id={suggestion.id}
@@ -29,5 +29,5 @@ export default class SuggestionList extends React.Component {
 }
 
 SuggestionList.defaultProps = {
-    data: []
+    suggestions: []
 }

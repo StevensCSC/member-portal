@@ -1,10 +1,12 @@
 import $ from 'jquery';
 
+let API_URL = "http://localhost:3000/"
+
 export default class ServerAPI {
 
   static upvote(id, onSuccess, onFailure) {
     $.get({
-      url: "http://localhost:3000/" + id + "/upvote",
+      url: API_URL + id + "/upvote",
       xhrFields: { withCredentials: true },
       dataType: "json",
       success: (data) => onSuccess(data),
@@ -14,7 +16,7 @@ export default class ServerAPI {
 
   static resetVote(id, onSuccess, onFailure) {
     $.get({
-      url: "http://localhost:3000/" + id + "/resetVote",
+      url: API_URL + id + "/resetVote",
       xhrFields: { withCredentials: true }, dataType: "json",
       success: (data) => onSuccess(data),
       error: (data) => onFailure(data)
@@ -23,7 +25,7 @@ export default class ServerAPI {
 
   static submit(json, onSuccess, onFailure) {
     $.post({
-      url: "http://localhost:3000/" + "submit",
+      url: API_URL + "submit",
       xhrFields: { withCredentials: true },
       dataType: "json",
       data: json,
@@ -33,8 +35,9 @@ export default class ServerAPI {
   }
 
   static userPermissions(onSuccess, onFailure) {
+    console.log('API_URL:' + API_URL);
     $.get({
-      url: "http://localhost:3000/" + "userPermissions",
+      url: API_URL + "userPermissions",
       xhrFields: { withCredentials: true },
       success: (data) => onSuccess(data),
       error: (data) => onFailure(data)
@@ -43,7 +46,7 @@ export default class ServerAPI {
 
   static getSuggestionsForCurrentUser(onSuccess, onFailure) {
     $.get({
-      url: "http://localhost:3000/" + "getSuggestionsForCurrentUser",
+      url: API_URL + "getSuggestionsForCurrentUser",
       xhrFields: { withCredentials: true },
       success: (data) => onSuccess(data),
       error: (data) => onFailure(data)

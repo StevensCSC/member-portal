@@ -50,7 +50,7 @@ export function getSuggestionsForUser(user) {
               return new Promise((resolve, reject) => {
                 client.scardAsync("suggestion:" + suggestion.id + ":votes")
                   .then((voteCount) => {
-                    client.sismemberAsync("suggestion:" + suggestion.id + ":votes", suggestion.suggester)
+                    client.sismemberAsync("suggestion:" + suggestion.id + ":votes", user)
                       .then((userUpvoted) => {
                         console.log('voteCount: ' + voteCount);
                         suggestion.voteCount = voteCount;

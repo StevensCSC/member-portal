@@ -33,47 +33,68 @@ app.use(session({
 
 app.use(express.static('./public'));
 
+// routes requiring authentication
+app.use(['/:id/upvote', '/:id/resetVote/', '/submit/', '/getSuggestionsForCurrentUser'], function (req, res, next) {
+  if (!req.session.accessToken) {
+    res.status(401).send('User not logged in');
+  } else {
+    github.authenticate({
+      type: 'oauth',
+      token: req.session.accessToken
+    });
+    github.users.get({}, function (err, usersReponse) {
+      if (err) {
+        res.status(500).send('Failed to load user GitHub username');
+      } else {
+        req.session.ghUser = usersReponse.login;
+        github.orgs.checkMembership({
+          org: "StevensCSC",
+          user: req.session.ghUser
+        }, function (err, membershipRes) {
+          if (err) {
+            res.status(403).send('User does not have permissions to view this page');
+          } else {
+            next();
+          }
+        });
+      }
+    });
+  }
+});
+
 // parse POST body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/:id/upvote', function (req, res) {
-  if (req.session.userLoggedIn && req.session.ghUser) {
-    let id = req.params.id;
-    console.log('Upvote id ' + id);
-    db.upvoteSuggestionForUser(id, req.session.ghUser)
-      .then((result) => {
-        res.json(result);
-      })
-      .catch((err) => {
-        res.end('{}');
-      });
-  } else {
-    res.end('{}');
-  }
+  let id = req.params.id;
+  console.log('Upvote id ' + id);
+  db.upvoteSuggestionForUser(id, req.session.ghUser)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.end('{}');
+    });
 });
 
 app.get('/:id/resetVote', function (req, res) {
-  if (req.session.userLoggedIn && req.session.ghUser) {
-    let id = req.params.id;
-    console.log('Reset id ' + id);
-    db.resetVoteSuggestionForUser(id, req.session.ghUser)
-      .then((result) => {
-        res.json(result);
-      })
-      .catch((err) => {
-        res.end('{}');
-      });
-  } else {
-    res.end('{}');
-  }
+  let id = req.params.id;
+  console.log('Reset id ' + id);
+  db.resetVoteSuggestionForUser(id, req.session.ghUser)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      res.end('{}');
+    });
 });
 
 app.post('/submit', function(req, res) {
   console.log('Submit, body: ' + JSON.stringify(req.body));
   console.log('session: ' + JSON.stringify(req.session));
   let suggestion = req.body;
-  if (suggestion.title && suggestion.desc && suggestion.link && req.session.userLoggedIn) {
+  if (suggestion.title && suggestion.desc && suggestion.link) {
     console.log('In if');
     suggestion.suggester = req.session.ghUser;
     db.createSuggestion(suggestion)
@@ -83,7 +104,7 @@ app.post('/submit', function(req, res) {
       })
       .catch((err) => {
         console.log('Error: ' + err);
-        res.end('{}');
+        res.end('[]');
       });
   } else {
     res.end('');
@@ -91,18 +112,14 @@ app.post('/submit', function(req, res) {
 });
 
 app.get('/getSuggestionsForCurrentUser', function(req, res) {
-  if (req.session.userLoggedIn && req.session.ghUser) {
-    db.getSuggestionsForUser(req.session.ghUser)
-      .then((result) => {
-        res.json(result);
-      })
-      .catch((err) => {
-        console.log('Error getting suggestions for current user: ' + err);
-        res.end('{}');
-      });
-  } else {
-    res.end('{}');
-  }
+  db.getSuggestionsForUser(req.session.ghUser)
+    .then((result) => {
+      res.json(result);
+    })
+    .catch((err) => {
+      console.log('Error getting suggestions for current user: ' + err);
+      res.end('{}');
+    });
 });
 
 app.get('/callback', function(req, res) {
@@ -133,34 +150,6 @@ app.get('/callback', function(req, res) {
       }
     }
   );
-});
-
-app.get('/userPermissions', function(req, res) {
-  if (req.session.accessToken) {
-    github.authenticate({
-      type: 'oauth',
-      token: req.session.accessToken
-    });
-    github.orgs.checkMembership({
-      org: "StevensCSC",
-      user: req.session.ghUser
-    }, function (err, membershipRes) {
-      if (err) {
-        res.json({
-          userLoggedIn: false
-        });
-      } else {
-         req.session.userLoggedIn = true;
-         res.json({
-          userLoggedIn: true
-        });
-      }
-    });
-  } else {
-    res.json({
-      userLoggedIn: false
-    });
-  }
 });
 
 app.listen('3000', function() {
