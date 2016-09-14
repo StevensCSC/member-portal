@@ -9,31 +9,16 @@ export default class SuggestionBox extends React.Component {
     super(props, context);
 
     this.state = {
-      data: [
-        {
-          id: 1,
-          title: "The Evolution of Javascript",
-          desc: "Netflix talk on ES6 & ES7.",
-          link: "https://www.youtube.com/watch?v=DqMFX91ToLw",
-          votes: 5,
-          upvoted: true
-        },
-        {
-          id: 2,
-          title: "Another Talk",
-          desc: "Description of talk",
-          link: "https://www.youtube.com/watch?v=DqMFX91ToLh",
-          votes: 10,
-          upvoted: false
-        }
-      ],
-      id: 3
+      data: []
     }
 
     this.onSuggestionSubmit = (suggestionJson) => {
       API.submit(
           suggestionJson,
-          (data) => console.log(data),
+          (data) => {
+            console.log(data);
+            this.setState({ data: data });
+          },
           (data) => console.log('Failed to submit suggestion.')
       );
     }
@@ -54,6 +39,13 @@ export default class SuggestionBox extends React.Component {
       }
     }
 
+  }
+
+  componentDidMount() {
+    API.getSuggestionsForCurrentUser(
+      (data) => this.setState({ data: data }),
+      (err) => console.log('Failed to load initial data.')
+    );
   }
 
   render() {

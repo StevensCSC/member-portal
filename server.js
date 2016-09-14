@@ -5,7 +5,8 @@ import ReactServer from 'react-dom/server';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import request from 'request';
-
+import bodyParser from 'body-parser';
+import * as db from './db.js';
 let app = express();
 
 let github = new GitHubApi({
@@ -15,8 +16,7 @@ let github = new GitHubApi({
   headers: {
     'user-agent': 'SCSC Member Portal'
   },
-  timeout: 5000
-});
+  timeout: 5000 });
 
 app.use(function(req, res, next) {
   res.header('Access-Control-Allow-Origin', "http://localhost:8080");
@@ -33,35 +33,74 @@ app.use(session({
 
 app.use(express.static('./public'));
 
-app.get('/:id/upvote', function (req, res) {
-  let id = req.params.id;
-  console.log('Upvote id ' + id);
-  console.log('Session id ' + req.sessionID);
+// parse POST body
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-  if (!req.session.votes) {
-    req.session.votes = 0;
+app.get('/:id/upvote', function (req, res) {
+  if (req.session.userLoggedIn) {
+    let id = req.params.id;
+    console.log('Upvote id ' + id);
+    console.log('Session id ' + req.sessionID);
+
+    if (!req.session.votes) {
+      req.session.votes = 0;
+    }
+    req.session.votes = req.session.votes + 1;
+    console.log('Session upvotes ' + req.session.votes);
   }
-  req.session.votes = req.session.votes + 1;
-  console.log('Session upvotes ' + req.session.votes);
   res.end('{}');
 });
 
 app.get('/:id/resetVote', function (req, res) {
-  let id = req.params.id;
-  console.log('Reset id ' + id);
-  console.log('Session id ' + req.sessionID);
+  if (req.session.userLoggedIn) {
+    let id = req.params.id;
+    console.log('Reset id ' + id);
+    console.log('Session id ' + req.sessionID);
 
-  if (!req.session.resets) {
-    req.session.resets = 0;
+    if (!req.session.resets) {
+      req.session.resets = 0;
+    }
+    req.session.resets = req.session.resets + 1;
+    console.log('Session resets ' + req.session.resets);
   }
-  req.session.resets = req.session.resets + 1;
-  console.log('Session resets ' + req.session.resets);
   res.end('{}');
 });
 
 app.post('/submit', function(req, res) {
-  console.log('Submit');
-  res.end('');
+  console.log('Submit, body: ' + JSON.stringify(req.body));
+  console.log('session: ' + JSON.stringify(req.session));
+  let suggestion = req.body;
+  if (suggestion.title && suggestion.desc && suggestion.link && req.session.userLoggedIn) {
+    console.log('In if');
+    suggestion.suggester = req.session.ghUser;
+    db.createSuggestion(suggestion)
+      .then((val) => {
+        console.log('Success: ' + JSON.stringify(val));
+        res.json(val);
+      })
+      .catch((err) => {
+        console.log('Error: ' + err);
+        res.end('{}');
+      });
+  } else {
+    res.end('');
+  }
+});
+
+app.get('/getSuggestionsForCurrentUser', function(req, res) {
+  if (req.session.userLoggedIn && req.session.ghUser) {
+    db.getSuggestionsForUser(req.session.ghUser)
+      .then((result) => {
+        res.json(result);
+      })
+      .catch((err) => {
+        console.log('Error getting suggestions for current user: ' + err);
+        res.end('{}');
+      });
+  } else {
+    res.end('{}');
+  }
 });
 
 app.get('/callback', function(req, res) {
@@ -109,13 +148,14 @@ app.get('/userPermissions', function(req, res) {
           userLoggedIn: false
         });
       } else {
+         req.session.userLoggedIn = true;
          res.json({
           userLoggedIn: true
         });
       }
     });
   } else {
-    req.json({
+    res.json({
       userLoggedIn: false
     });
   }

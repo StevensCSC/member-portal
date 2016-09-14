@@ -13,8 +13,8 @@ export default class SuggestionList extends React.Component {
           title={suggestion.title}
           desc={suggestion.desc}
           link={suggestion.link}
-          upvoted={suggestion.upvoted}
-          votes={suggestion.votes}
+          userUpvoted={suggestion.userUpvoted}
+          voteCount={suggestion.voteCount}
           key={suggestion.id}
           handleVoteChange={that.props.handleVoteChange} />
       );

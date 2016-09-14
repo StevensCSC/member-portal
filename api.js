@@ -15,8 +15,7 @@ export default class ServerAPI {
   static resetVote(id, onSuccess, onFailure) {
     $.get({
       url: "http://localhost:3000/" + id + "/resetVote",
-      xhrFields: { withCredentials: true },
-      dataType: "json",
+      xhrFields: { withCredentials: true }, dataType: "json",
       success: (data) => onSuccess(data),
       error: (data) => onFailure(data)
     });
@@ -36,6 +35,15 @@ export default class ServerAPI {
   static userPermissions(onSuccess, onFailure) {
     $.get({
       url: "http://localhost:3000/" + "userPermissions",
+      xhrFields: { withCredentials: true },
+      success: (data) => onSuccess(data),
+      error: (data) => onFailure(data)
+    });
+  }
+
+  static getSuggestionsForCurrentUser(onSuccess, onFailure) {
+    $.get({
+      url: "http://localhost:3000/" + "getSuggestionsForCurrentUser",
       xhrFields: { withCredentials: true },
       success: (data) => onSuccess(data),
       error: (data) => onFailure(data)
