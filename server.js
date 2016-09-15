@@ -1,5 +1,6 @@
 import express from 'express';
 import session from 'express-session';
+import connectRedis from 'connect-redis';
 import GitHubApi from 'github';
 import ReactServer from 'react-dom/server';
 import React from 'react';
@@ -7,6 +8,7 @@ import ReactDOM from 'react-dom';
 import request from 'request';
 import bodyParser from 'body-parser';
 import * as db from './db.js';
+import redis from 'redis';
 let app = express();
 
 let github = new GitHubApi({
@@ -24,10 +26,17 @@ app.use(function(req, res, next) {
   next();
 });
 
+let RedisStore = connectRedis(session);
+let redisClient = redis.createClient();
+db.setClient(redisClient);
+
 app.use(session({
-  secret: "blah",
-  resave: true,
-  saveUninitialized: true
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+  store: new RedisStore({
+    client: redisClient
+  })
 }));
 
 app.use(express.static('./public'));

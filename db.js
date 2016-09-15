@@ -1,14 +1,18 @@
 import redis from 'redis';
 import bluebird from 'bluebird';
 
-let client = redis.createClient();
+var client;
 bluebird.promisifyAll(redis.RedisClient.prototype);
 
-client.on('error', (err) => {
-  console.log('REDIS ERROR: ' + err);
-}).on('ready', () => {
-  console.log('REDIS READY');
-});
+export function setClient(newClient) {
+  client = newClient;
+
+  client.on('error', (err) => {
+    console.log('REDIS ERROR: ' + err);
+  }).on('ready', () => {
+    console.log('REDIS READY');
+  });
+}
 
 export function createSuggestion(suggestion, then, err) {
   return new Promise((resolve, reject) => {
