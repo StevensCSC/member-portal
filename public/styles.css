@@ -14,3 +14,86 @@
   overflow: hidden;
   width: 100%;
 }
+
+.active {
+  color: red;
+}
+
+.inactive {
+  color: grey;
+}
+
+.upvote-arrow {
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.upvote-arrow:link {
+  text-decoration: none;
+}
+
+.upvote-arrow:visited {
+  text-decoration: none;
+}
+
+.upvote-arrow:hover {
+  text-decoration: none;
+}
+
+.upvote-arrow:active {
+  text-decoration: none;
+}
+
+.active:link {
+  color: red;
+}
+
+.active:visited {
+  color: red;
+}
+
+.active:hover {
+  color: red;
+}
+
+.active:active {
+  color: red;
+}
+
+.inactive:link {
+  color: grey;
+}
+
+.inactive:visited {
+  color: grey;
+}
+
+.inactive:hover {
+  color: grey;
+}
+
+.inactive:active {
+  color: grey;
+}
+
+input {
+  display: block;
+  margin-bottom: 5px;
+}
+
+label {
+  float: left;
+  width: 100px;
+}
+
+textarea {
+  resize: none;
+}
+
+h1 {
+  font-size: 26px;
+}
+
+.navbar-nav a {
+  cursor: pointer;
+}

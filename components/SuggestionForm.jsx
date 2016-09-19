@@ -44,19 +44,22 @@ export default class SuggestionForm extends React.Component {
       <div className="suggestionFormContainer">
         <h1>Suggest a Talk</h1>
         <form className="suggestionForm" onSubmit={ this.handleSubmit }>
+          <label htmlFor="talkTitleInput">Title</label>
           <input
             type="text"
-            placeholder="Talk Title"
+            id="talkTitleInput"
             value={ this.state.title }
             onChange={ this.handleTitleChange } />
+          <label htmlFor="talkLinkInput">Link</label>
           <input
             type="text"
-            placeholder="Link"
+            id="talkLinkInput"
             value={ this.state.link }
             onChange={ this.handleLinkChange } />
-          <input
-            type="text"
-            placeholder="Description"
+          <label htmlFor="talkDescInput">Description</label>
+          <textarea
+            id="talkDescInput"
+            maxLength="50"
             value={ this.state.desc }
             onChange={ this.handleDescChange } />
           <input type="submit" value="Submit"/>

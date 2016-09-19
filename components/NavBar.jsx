@@ -2,6 +2,20 @@ import React from 'react';
 
 export default class NavBar extends React.Component {
 
+  getNavList() {
+    switch (this.props.loginStatus) {
+    case 0:
+    case 1:
+        return;
+    case 2:
+      return (
+        <li>
+          <a onClick={this.props.logout}>Logout</a>
+        </li>
+      );
+    }
+  }
+
   render() {
     return (
       <nav className="navbar navbar-inverse navbar-fixed-top" role="navigation">
@@ -17,9 +31,7 @@ export default class NavBar extends React.Component {
           </div>
           <div className="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul className="nav navbar-nav">
-              <li>
-                <a onClick={this.props.logout}>Logout</a>
-              </li>
+              {this.getNavList()}
             </ul>
           </div>
         </div>
