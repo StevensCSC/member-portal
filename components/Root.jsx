@@ -67,9 +67,10 @@ export default class Root extends React.Component {
       API.logout(
         (data) => {
           this.setState({
-            loginStatus: LOGIN_STATUS.LOGGED_OUT,
+            loginStatus: LOGIN_STATUS.NOT_LOGGED_IN,
             suggestions: []
           });
+          console.log("updated state on logout");
         },
         (err) => {
 
@@ -82,7 +83,6 @@ export default class Root extends React.Component {
   componentDidMount () {
     API.getSuggestionsForCurrentUser(
       (suggestions) => {
-        console.log("suggestions: " + JSON.stringify(suggestions));
         this.setState({
           loginStatus: LOGIN_STATUS.LOGGED_IN,
           suggestions: suggestions
@@ -98,14 +98,17 @@ export default class Root extends React.Component {
     } else if (this.state.loginStatus === LOGIN_STATUS.NOT_IN_ORG) {
       return <a href="https://github/com/stevenscsc">Join the SCSC GitHub organization for access</a>;
     } else {
-      return <a href="https://github.com/login/oauth/authorize?scope=read:org&client_id=0ffffd652180d6e16381">Log in first!</a>;
+      return;
     }
   }
 
   render() {
     return (
       <div className="react-root">
-        <NavBar loginStatus={this.state.loginStatus} logout={this.logout} />
+        <NavBar
+          loginStatus={this.state.loginStatus}
+          login="https://github.com/login/oauth/authorize?scope=read:org&client_id=0ffffd652180d6e16381"
+          logout={this.logout} />
         {this.getMainContent()}
       </div>
     );

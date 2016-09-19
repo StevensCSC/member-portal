@@ -6,7 +6,11 @@ export default class NavBar extends React.Component {
     switch (this.props.loginStatus) {
     case 0:
     case 1:
-        return;
+      return (
+        <li>
+          <a href={this.props.login}>Login</a>
+        </li>
+      );
     case 2:
       return (
         <li>
