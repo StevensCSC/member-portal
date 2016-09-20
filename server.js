@@ -9,6 +9,8 @@ import request from 'request';
 import bodyParser from 'body-parser';
 import * as db from './db.js';
 import redis from 'redis';
+import logger from './logger.js';
+
 let app = express();
 
 let github = new GitHubApi({
@@ -76,7 +78,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/:id/upvote', function (req, res) {
   let id = req.params.id;
-  console.log('User ' + req.session.ghUser + ' upvoting suggestion #' + id);
+  logger.info('User ' + req.session.ghUser + ' upvoting suggestion #' + id);
   db.upvoteSuggestionForUser(id, req.session.ghUser)
     .then((result) => {
       res.json(result);
@@ -88,7 +90,7 @@ app.get('/:id/upvote', function (req, res) {
 
 app.get('/:id/resetVote', function (req, res) {
   let id = req.params.id;
-  console.log('User ' + req.session.ghUser + ' reseting vote for suggestion #' + id);
+  logger.info('User ' + req.session.ghUser + ' reseting vote for suggestion #' + id);
   db.resetVoteSuggestionForUser(id, req.session.ghUser)
     .then((result) => {
       res.json(result);
@@ -99,17 +101,17 @@ app.get('/:id/resetVote', function (req, res) {
 });
 
 app.post('/submit', function(req, res) {
-  console.log('User ' + req.session.ghUser + ' submitting suggestion: ' + JSON.stringify(req.body));
+  logger.info('User ' + req.session.ghUser + ' submitting suggestion: ' + JSON.stringify(req.body));
   let suggestion = req.body;
   if (suggestion.title && suggestion.desc && suggestion.link) {
     suggestion.suggester = req.session.ghUser;
     db.createSuggestion(suggestion)
       .then((val) => {
-        console.log('Success: ' + JSON.stringify(val));
+        logger.info('Success: ' + JSON.stringify(val));
         res.json(val);
       })
       .catch((err) => {
-        console.log('Error: ' + err);
+        logger.info('Error: ' + err);
         res.end('[]');
       });
   } else {
@@ -118,13 +120,13 @@ app.post('/submit', function(req, res) {
 });
 
 app.get('/getSuggestionsForCurrentUser', function(req, res) {
-  console.log('Loading suggestions for ' + req.session.ghUser);
+  logger.info('Loading suggestions for ' + req.session.ghUser);
   db.getSuggestionsForUser(req.session.ghUser)
     .then((result) => {
       res.json(result);
     })
     .catch((err) => {
-      console.log('Error getting suggestions for current user: ' + err);
+      logger.info('Error getting suggestions for current user: ' + err);
       res.end('{}');
     });
 });
@@ -157,11 +159,11 @@ app.get('/callback', function(req, res) {
 });
 
 app.get('/logout', function(req, res) {
-  console.log('Logging out user ' + req.session.ghUser);
+  logger.info('Logging out user ' + req.session.ghUser);
   req.session.destroy();
   res.end('Logged out');
 });
 
 app.listen('3000', function() {
-  console.log('Example app listening on port 3000!');
+  logger.info('Example app listening on port 3000!');
 });

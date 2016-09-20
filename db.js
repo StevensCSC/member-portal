@@ -1,5 +1,6 @@
 import redis from 'redis';
 import bluebird from 'bluebird';
+import logger from './logger.js';
 
 var client;
 bluebird.promisifyAll(redis.RedisClient.prototype);
@@ -8,9 +9,9 @@ export function setClient(newClient) {
   client = newClient;
 
   client.on('error', (err) => {
-    console.log('REDIS ERROR: ' + err);
+    logger.error('REDIS ERROR: ' + err);
   }).on('ready', () => {
-    console.log('REDIS READY');
+    logger.info('REDIS READY');
   });
 }
 
@@ -27,7 +28,7 @@ export function createSuggestion(suggestion, then, err) {
             resolve(result);
           })
           .catch((err) => {
-            console.log("Failed to get suggestions for " + suggestion.suggester + ". Error: " + err);
+            logger.error("Failed to get suggestions for " + suggestion.suggester + ". Error: " + err);
             reject(err);
           });
       } else {
