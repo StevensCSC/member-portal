@@ -9,13 +9,13 @@ export default class SuggestionList extends React.Component {
     var suggestionNodes = this.props.suggestions.map(function (suggestion) {
       return (
         <Suggestion
-          id={suggestion.id}
+          id={suggestion.suggestion_id}
           title={suggestion.title}
-          desc={suggestion.desc}
+          desc={suggestion.description}
           link={suggestion.link}
-          userUpvoted={suggestion.userUpvoted}
-          voteCount={suggestion.voteCount}
-          key={suggestion.id}
+          userUpvoted={suggestion.userupvoted}
+          voteCount={suggestion.votes}
+          key={suggestion.suggestion_id}
           handleVoteChange={that.props.handleVoteChange} />
       );
     });

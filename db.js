@@ -1,123 +1,81 @@
-import redis from 'redis';
+import pg from 'pg';
 import bluebird from 'bluebird';
 import logger from './logger.js';
 
-var client;
-bluebird.promisifyAll(redis.RedisClient.prototype);
+let client = new pg.Client({
+  database: 'testdb'
+});
 
-export function setClient(newClient) {
-  client = newClient;
+client.connect(function(err) {
+  if (err) {
+    logger.error("Error connecting to PostgreSQL:" + err);
+  }
+});
 
-  client.on('error', (err) => {
-    logger.error('REDIS ERROR: ' + err);
-  }).on('ready', () => {
-    logger.info('REDIS READY');
-  });
+function suggestionToSQLArray(suggestion) {
+  return [
+    suggestion.title,
+    suggestion.link,
+    suggestion.desc,
+    suggestion.suggester
+  ];
 }
 
 export function createSuggestion(suggestion, then, err) {
   return new Promise((resolve, reject) => {
-    client.incr('next_suggestion_id', (err, suggestion_id) => {
-      if (!err) {
-        suggestion.id = suggestion_id;
-        client.hmset("suggestion:" + suggestion_id, suggestion);
-        client.sadd("suggestions", "suggestion:" + suggestion_id);
-        client.sadd("suggestion:" + suggestion_id + ":votes", suggestion.suggester);
-        getSuggestionsForUser(suggestion.suggester)
-          .then((result) => {
-            resolve(result);
-          })
-          .catch((err) => {
-            logger.error("Failed to get suggestions for " + suggestion.suggester + ". Error: " + err);
-            reject(err);
-          });
-      } else {
-        reject(err);
-      }
-    });
+    client.query('INSERT INTO suggestions (title, link, description, suggester)' +
+      'VALUES ($1, $2, $3, $4)',
+      suggestionToSQLArray(suggestion),
+      function (err, result) {
+        if (err) {
+          reject(err);
+        }
+
+        resolve();
+      });
   });
 }
 
 export function getSuggestionsForUser(user) {
   return new Promise((resolve, reject) => {
-    client.smembers('suggestions', (err, results) => {
-      if (!err) {
-        let suggestionPromises = results.map((suggestionId) => {
-          return client.hgetallAsync(suggestionId);
-        });
-
-        Promise.all(suggestionPromises)
-          .then((suggestions) => {
-            let suggestionWithCountPromises = suggestions.map((suggestion) => {
-              return new Promise((resolve, reject) => {
-                client.scardAsync("suggestion:" + suggestion.id + ":votes")
-                  .then((voteCount) => {
-                    client.sismemberAsync("suggestion:" + suggestion.id + ":votes", user)
-                      .then((userUpvoted) => {
-                        suggestion.voteCount = voteCount;
-                        suggestion.userUpvoted = userUpvoted == 1;
-                        resolve(suggestion);
-                      })
-                      .catch((err) => {
-                        reject(err);
-                      });
-                  })
-                  .catch((err) => {
-                    reject(err);
-                  });
-              });
-            });
-
-            Promise.all(suggestionWithCountPromises)
-              .then((suggestionsWithCount) => {
-                resolve(suggestionsWithCount);
-              })
-              .catch((err) => {
-                reject(err);
-              });
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      } else {
+    client.query("SELECT suggestion_id, title, link, description, suggester," +
+                    "(SELECT count(*) FROM votes WHERE suggestion_id = suggestion.suggestion_id) as votes," +
+                    "(SELECT case when count(*) > 0 then TRUE else FALSE end FROM votes WHERE voter = $1 AND suggestion_id = suggestion.suggestion_id) as userUpvoted FROM suggestions as suggestion",
+    [user],
+    function(err, result) {
+      if (err) {
         reject(err);
       }
+
+      resolve(result.rows);
     });
   });
 }
 
 export function upvoteSuggestionForUser(suggestionId, user) {
   return new Promise((resolve, reject) => {
-    client.saddAsync('suggestion:' + suggestionId + ':votes', user)
-      .then((result) => {
-        getSuggestionsForUser(user)
-          .then((suggestions) => {
-            resolve(suggestions);
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      })
-      .catch((err) => {
+    client.query("INSERT INTO votes (suggestion_id, voter) VALUES ($1, $2)",
+     [suggestionId, user],
+     function (err, result) {
+      if (err) {
         reject(err);
-      });
+      }
+
+      resolve();
+     });
   });
 }
 
 export function resetVoteSuggestionForUser(suggestionId, user) {
    return new Promise((resolve, reject) => {
-    client.sremAsync('suggestion:' + suggestionId + ':votes', user)
-      .then((result) => {
-        getSuggestionsForUser(user)
-          .then((suggestions) => {
-            resolve(suggestions);
-          })
-          .catch((err) => {
-            reject(err);
-          });
-      })
-      .catch((err) => {
+    client.query("DELETE FROM votes WHERE suggestion_id = $1 AND voter = $2",
+     [suggestionId, user],
+     function (err, result) {
+      if (err) {
         reject(err);
-      });
+      }
+
+      resolve();
+     });
   });
 }

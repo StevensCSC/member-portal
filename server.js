@@ -1,6 +1,5 @@
 import express from 'express';
 import session from 'express-session';
-import connectRedis from 'connect-redis';
 import GitHubApi from 'github';
 import ReactServer from 'react-dom/server';
 import React from 'react';
@@ -8,7 +7,6 @@ import ReactDOM from 'react-dom';
 import request from 'request';
 import bodyParser from 'body-parser';
 import * as db from './db.js';
-import redis from 'redis';
 import logger from './logger.js';
 
 let app = express();
@@ -28,17 +26,10 @@ app.use(function(req, res, next) {
   next();
 });
 
-let RedisStore = connectRedis(session);
-let redisClient = redis.createClient();
-db.setClient(redisClient);
-
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: false,
-  store: new RedisStore({
-    client: redisClient
-  })
+  saveUninitialized: false
 }));
 
 app.use(express.static('./public'));
@@ -80,8 +71,14 @@ app.get('/:id/upvote', function (req, res) {
   let id = req.params.id;
   logger.info('User ' + req.session.ghUser + ' upvoting suggestion #' + id);
   db.upvoteSuggestionForUser(id, req.session.ghUser)
-    .then((result) => {
-      res.json(result);
+    .then(() => {
+      db.getSuggestionsForUser(req.session.ghUser)
+        .then((result) => {
+          res.json(result);
+        })
+        .catch((err) => {
+          res.end('{}');
+        });
     })
     .catch((err) => {
       res.end('{}');
@@ -92,8 +89,15 @@ app.get('/:id/resetVote', function (req, res) {
   let id = req.params.id;
   logger.info('User ' + req.session.ghUser + ' reseting vote for suggestion #' + id);
   db.resetVoteSuggestionForUser(id, req.session.ghUser)
-    .then((result) => {
-      res.json(result);
+    .then(() => {
+      db.getSuggestionsForUser(req.session.ghUser)
+        .then((result) => {
+          res.json(result);
+        })
+        .catch((err) => {
+          res.end('{}');
+        });
+
     })
     .catch((err) => {
       res.end('{}');
@@ -106,9 +110,14 @@ app.post('/submit', function(req, res) {
   if (suggestion.title && suggestion.desc && suggestion.link) {
     suggestion.suggester = req.session.ghUser;
     db.createSuggestion(suggestion)
-      .then((val) => {
-        logger.info('Success: ' + JSON.stringify(val));
-        res.json(val);
+      .then(() => {
+        db.getSuggestionsForUser(req.session.ghUser)
+         .then((result) => {
+           res.json(result);
+         })
+         .catch((err) => {
+           res.end('{}');
+         });
       })
       .catch((err) => {
         logger.info('Error: ' + err);
@@ -123,6 +132,7 @@ app.get('/getSuggestionsForCurrentUser', function(req, res) {
   logger.info('Loading suggestions for ' + req.session.ghUser);
   db.getSuggestionsForUser(req.session.ghUser)
     .then((result) => {
+      logger.info('Got suggestions for current user: ' + JSON.stringify(result));
       res.json(result);
     })
     .catch((err) => {
