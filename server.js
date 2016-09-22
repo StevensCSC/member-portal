@@ -8,8 +8,12 @@ import request from 'request';
 import bodyParser from 'body-parser';
 import * as db from './db.js';
 import logger from './logger.js';
+import connectPg from 'connect-pg-simple';
+import pg from 'pg';
 
 let app = express();
+
+let pgSession = connectPg(session);
 
 let PORT = process.env.PORT || 3000;
 
@@ -31,7 +35,10 @@ app.use(function(req, res, next) {
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  store: new pgSession({
+    pg: pg
+  })
 }));
 
 app.use(express.static('./public'));
