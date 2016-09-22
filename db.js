@@ -3,7 +3,7 @@ import bluebird from 'bluebird';
 import logger from './logger.js';
 
 pg.defaults.ssl = true;
-client.connect(process.env.DATABASE_URL, function(err) {
+pg.connect(process.env.DATABASE_URL, function(err) {
   if (err) {
     logger.error("Error connecting to PostgreSQL:" + err);
   }
