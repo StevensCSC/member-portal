@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-let API_URL = "http://localhost:3000/"
+let API_URL = "http://scsc-memberportal.herokuapp.com/"
 
 export default class ServerAPI {
 

@@ -11,6 +11,8 @@ import logger from './logger.js';
 
 let app = express();
 
+let PORT = process.env.PORT || 3000;
+
 let github = new GitHubApi({
   protocol: 'https',
   host: 'api.github.com',
@@ -174,6 +176,6 @@ app.get('/logout', function(req, res) {
   res.end('Logged out');
 });
 
-app.listen('3000', function() {
-  logger.info('Example app listening on port 3000!');
+app.listen(PORT, function() {
+  logger.info('Example app listening on port ' + PORT + '!');
 });
