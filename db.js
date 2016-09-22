@@ -2,11 +2,8 @@ import pg from 'pg';
 import bluebird from 'bluebird';
 import logger from './logger.js';
 
-let client = new pg.Client({
-  database: 'testdb'
-});
-
-client.connect(function(err) {
+pg.defaults.ssl = true;
+client.connect(process.env.DATABASE_URL, function(err) {
   if (err) {
     logger.error("Error connecting to PostgreSQL:" + err);
   }
