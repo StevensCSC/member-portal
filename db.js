@@ -37,14 +37,15 @@ export function createSuggestion(suggestion, then, err) {
   });
 }
 
-export function getSuggestionsForUser(user) {
+export function getSuggestionsForUser(userId) {
   return new Promise((resolve, reject) => {
     client.query("SELECT suggestion_id, title, link, description, suggester," +
                     "(SELECT count(*) FROM votes WHERE suggestion_id = suggestion.suggestion_id) as votes," +
                     "(SELECT case when count(*) > 0 then TRUE else FALSE end FROM votes WHERE voter = $1 AND suggestion_id = suggestion.suggestion_id) as userUpvoted FROM suggestions as suggestion",
-    [user],
+    [userId],
     function(err, result) {
       if (err) {
+        console.log(err);
         reject(err);
       }
 
@@ -53,10 +54,10 @@ export function getSuggestionsForUser(user) {
   });
 }
 
-export function upvoteSuggestionForUser(suggestionId, user) {
+export function upvoteSuggestionForUser(suggestionId, userId) {
   return new Promise((resolve, reject) => {
     client.query("INSERT INTO votes (suggestion_id, voter) VALUES ($1, $2)",
-     [suggestionId, user],
+     [suggestionId, userId],
      function (err, result) {
       if (err) {
         reject(err);
@@ -67,10 +68,10 @@ export function upvoteSuggestionForUser(suggestionId, user) {
   });
 }
 
-export function resetVoteSuggestionForUser(suggestionId, user) {
+export function resetVoteSuggestionForUser(suggestionId, userId) {
    return new Promise((resolve, reject) => {
     client.query("DELETE FROM votes WHERE suggestion_id = $1 AND voter = $2",
-     [suggestionId, user],
+     [suggestionId, userId],
      function (err, result) {
       if (err) {
         reject(err);

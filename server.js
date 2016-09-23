@@ -52,11 +52,13 @@ app.use(['/:id/upvote', '/:id/resetVote/', '/submit/', '/getSuggestionsForCurren
       type: 'oauth',
       token: req.session.accessToken
     });
-    github.users.get({}, function (err, usersReponse) {
+    github.users.get({}, function (err, usersResponse) {
       if (err) {
         res.status(500).send('Failed to load user GitHub username');
       } else {
-        req.session.ghUser = usersReponse.login;
+        console.log('usersResponse' + JSON.stringify(usersResponse));
+        req.session.ghUser = usersResponse.login;
+        req.session.ghId = usersResponse.id;
         github.orgs.checkMembership({
           org: "StevensCSC",
           user: req.session.ghUser
@@ -79,9 +81,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.get('/:id/upvote', function (req, res) {
   let id = req.params.id;
   logger.info('User ' + req.session.ghUser + ' upvoting suggestion #' + id);
-  db.upvoteSuggestionForUser(id, req.session.ghUser)
+  db.upvoteSuggestionForUser(id, req.session.ghId)
     .then(() => {
-      db.getSuggestionsForUser(req.session.ghUser)
+      db.getSuggestionsForUser(req.session.ghId)
         .then((result) => {
           res.json(result);
         })
@@ -97,9 +99,9 @@ app.get('/:id/upvote', function (req, res) {
 app.get('/:id/resetVote', function (req, res) {
   let id = req.params.id;
   logger.info('User ' + req.session.ghUser + ' reseting vote for suggestion #' + id);
-  db.resetVoteSuggestionForUser(id, req.session.ghUser)
+  db.resetVoteSuggestionForUser(id, req.session.ghId)
     .then(() => {
-      db.getSuggestionsForUser(req.session.ghUser)
+      db.getSuggestionsForUser(req.session.ghId)
         .then((result) => {
           res.json(result);
         })
@@ -117,10 +119,10 @@ app.post('/submit', function(req, res) {
   logger.info('User ' + req.session.ghUser + ' submitting suggestion: ' + JSON.stringify(req.body));
   let suggestion = req.body;
   if (suggestion.title && suggestion.desc && suggestion.link) {
-    suggestion.suggester = req.session.ghUser;
+    suggestion.suggester = req.session.ghId;
     db.createSuggestion(suggestion)
       .then(() => {
-        db.getSuggestionsForUser(req.session.ghUser)
+        db.getSuggestionsForUser(req.session.ghId)
          .then((result) => {
            res.json(result);
          })
@@ -139,7 +141,7 @@ app.post('/submit', function(req, res) {
 
 app.get('/getSuggestionsForCurrentUser', function(req, res) {
   logger.info('Loading suggestions for ' + req.session.ghUser);
-  db.getSuggestionsForUser(req.session.ghUser)
+  db.getSuggestionsForUser(req.session.ghId)
     .then((result) => {
       logger.info('Got suggestions for current user: ' + JSON.stringify(result));
       res.json(result);
@@ -166,8 +168,10 @@ app.get('/callback', function(req, res) {
           type: 'oauth',
           token: req.session.accessToken
         });
-        github.users.get({}, function (err, usersReponse) {
-          req.session.ghUser = usersReponse.login;
+        github.users.get({}, function (err, usersResponse) {
+          console.log('usersResponse: ' + JSON.stringify(usersResponse));
+          req.session.ghUser = usersResponse.login;
+          req.session.ghId = usersResponse.id;
           res.redirect('/');
         });
       } else {
