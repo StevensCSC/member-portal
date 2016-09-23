@@ -1,7 +1,6 @@
 import express from 'express';
 import session from 'express-session';
 import GitHubApi from 'github';
-import ReactServer from 'react-dom/server';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import request from 'request';
@@ -112,6 +111,9 @@ app.post('/submit', function(req, res) {
   logger.info('User ' + req.session.ghUser + ' submitting suggestion: ' + JSON.stringify(req.body));
   let suggestion = req.body;
   if (suggestion.title && suggestion.desc && suggestion.link) {
+    if (!suggestion.link.match(/^[a-zA-Z]+:\/\//)) {
+      suggestion.link = "http://" + suggestion.link;
+    }
     suggestion.suggester = req.session.ghId;
     db.createSuggestion(suggestion)
       .then(() => {
