@@ -41,7 +41,7 @@ export function getSuggestionsForUser(userId) {
   return new Promise((resolve, reject) => {
     client.query("SELECT suggestion_id, title, link, description, suggester," +
                     "(SELECT count(*) FROM votes WHERE suggestion_id = suggestion.suggestion_id) as votes," +
-                    "(SELECT case when count(*) > 0 then TRUE else FALSE end FROM votes WHERE voter = $1 AND suggestion_id = suggestion.suggestion_id) as userUpvoted FROM suggestions as suggestion",
+                    "(SELECT case when count(*) > 0 then TRUE else FALSE end FROM votes WHERE voter = $1 AND suggestion_id = suggestion.suggestion_id) as userUpvoted FROM suggestions as suggestion ORDER BY votes DESC",
     [userId],
     function(err, result) {
       if (err) {
