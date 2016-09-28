@@ -96,7 +96,7 @@ export default class Root extends React.Component {
     if (this.state.loginStatus === LOGIN_STATUS.LOGGED_IN) {
       return <SuggestionBox onSuggestionSubmit={this.onSuggestionSubmit} handleVoteChange={this.handleVoteChange} suggestions={this.state.suggestions} />;
     } else if (this.state.loginStatus === LOGIN_STATUS.NOT_IN_ORG) {
-      return <a href="https://github/com/stevenscsc">Join the SCSC GitHub organization for access</a>;
+      return <p>You need to be a member of the StevensCSC organization on GitHub for access. Please make a GitHub account and email your GitHub username to scsc@stevens.edu for access.</p>;
     } else {
       return;
     }
