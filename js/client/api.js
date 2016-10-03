@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-let API_URL = "http://scsc-memberportal.herokuapp.com/"
+let API_URL = process.env.NODE_ENV === 'production' ? 'http://scsc-memberportal.herokuapp.com/' : 'http://localhost:3000/';
 
 export default class ServerAPI {
 

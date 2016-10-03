@@ -70,7 +70,6 @@ export default class Root extends React.Component {
             loginStatus: LOGIN_STATUS.NOT_LOGGED_IN,
             suggestions: []
           });
-          console.log("updated state on logout");
         },
         (err) => {
 
@@ -107,7 +106,7 @@ export default class Root extends React.Component {
       <div className="react-root">
         <NavBar
           loginStatus={this.state.loginStatus}
-          login="https://github.com/login/oauth/authorize?scope=read:org&client_id=0ffffd652180d6e16381"
+          login={"https://github.com/login/oauth/authorize?scope=read:org&client_id=" + this.props.ghClientId}
           logout={this.logout} />
         {this.getMainContent()}
       </div>

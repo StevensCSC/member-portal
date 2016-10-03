@@ -4,8 +4,18 @@ import logger from './logger.js';
 
 var client;
 
-pg.defaults.ssl = true;
-pg.connect(process.env.DATABASE_URL, function (err, c) {
+function getConfig() {
+  if(process.env.NODE_ENV === 'production') {
+    pg.defaults.ssl = true;
+    return process.env.DATABASE_URL;
+  } else {
+    return {
+      database: 'scsc_db',
+    };
+  }
+}
+
+pg.connect(getConfig(), function (err, c) {
   if (err) {
     logger.error("Error connecting to PostgreSQL:" + err);
   } else {

@@ -16,6 +16,24 @@ let pgSession = connectPg(session);
 
 let PORT = process.env.PORT || 3000;
 
+var client_id;
+var client_secret;
+var session_store;
+
+if (process.env.NODE_ENV === 'production') {
+  client_id = process.env.GH_CLIENT_ID;
+  client_secret = process.env.GH_CLIENT_SECRET;
+  session_store = new pgSession({
+    pg: pg
+  });
+} else {
+  // for development, use OAuth app redirecting to localhost
+  client_id = 'e6ee50c78c3897414fff';
+  client_secret = '96561f9593a891deb8314e7468a4c89630f3fc5d';
+  // for development, use MemoryStore for sessions
+  session_store = undefined;
+}
+
 let github = new GitHubApi({
   protocol: 'https',
   host: 'api.github.com',
@@ -25,12 +43,10 @@ let github = new GitHubApi({
   timeout: 5000 });
 
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'dev_secret',
   resave: false,
   saveUninitialized: false,
-  store: new pgSession({
-    pg: pg
-  })
+  store: session_store
 }));
 
 app.use(express.static('./public'));
@@ -151,8 +167,8 @@ app.get('/callback', function(req, res) {
   request.post('https://github.com/login/oauth/access_token',
     {
       json: {
-        client_id: process.env.GH_CLIENT_ID,
-        client_secret: process.env.GH_CLIENT_SECRET,
+        client_id: client_id,
+        client_secret: client_secret,
         code: req.query.code
       }
     },
