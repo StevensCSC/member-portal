@@ -1,18 +1,38 @@
 .voteBox {
   float: left;
-  width: 5%;
+  width: 2%;
   text-align: center;
 }
 
 .suggestionInfo {
   float: left;
-  width: 95%;
+  width: 97%;
 }
 
 .suggestion {
   padding-bottom: 10px;
   overflow: hidden;
   width: 100%;
+}
+
+.removeButton, .removeButton:hover {
+  display: block;
+  color: red;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.archiveButton, .archiveButton:hover {
+  display: block;
+  color: blue;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.controls {
+  float: left;
+  width: 1%;
+  text-align: center;
 }
 
 .active {

@@ -16,20 +16,26 @@ export default class Root extends React.Component {
 
     this.state = {
       loginStatus: LOGIN_STATUS.NOT_LOGGED_IN,
+      userRole: 'no_role',
       suggestions: []
     }
 
     this.onRequestError = (err) => {
       if (err.status === 401) {
-        this.setState({
-          loginStatus: LOGIN_STATUS.NOT_LOGGED_IN,
-          suggestions: []
-        });
-      } else if (err.status === 403) {
-        this.setState({
-          loginStatus: LOGIN_STATUS.NOT_IN_ORG,
-          suggestions: []
-        });
+        if (err.responseText === 'NOT_LOGGED_IN') {
+          this.setState({
+            loginStatus: LOGIN_STATUS.NOT_LOGGED_IN,
+            suggestions: [],
+            userRole: 'no_role'
+          });
+        }
+        else if (err.responseText === 'NOT_IN_ORG') {
+          this.setState({
+            loginStatus: LOGIN_STATUS.NOT_IN_ORG,
+            suggestions: [],
+            userRole: 'no_role'
+          });
+        }
       }
     }
 
@@ -63,6 +69,26 @@ export default class Root extends React.Component {
       }
     }
 
+    this.handleRemove = (id) => {
+      API.deleteSuggestion(
+        id,
+        (suggestions) => {
+          this.setState({ suggestions: suggestions });
+        },
+        this.onRequestError
+      );
+    }
+
+    this.handleArchive = (id) => {
+      API.archiveSuggestion(
+        id,
+        (suggestions) => {
+          this.setState({ suggestions: suggestions });
+        },
+        this.onRequestError
+      );
+    }
+
     this.logout = () => {
       API.logout(
         (data) => {
@@ -71,9 +97,7 @@ export default class Root extends React.Component {
             suggestions: []
           });
         },
-        (err) => {
-
-        }
+        this.onRequestError
       );
     }
 
@@ -89,11 +113,26 @@ export default class Root extends React.Component {
       },
       this.onRequestError
     );
+    API.getUserRole(
+      ({role}) => {
+        this.setState({
+          userRole: role
+        });
+      },
+      this.onRequestError
+    );
   }
 
   getMainContent () {
     if (this.state.loginStatus === LOGIN_STATUS.LOGGED_IN) {
-      return <SuggestionBox onSuggestionSubmit={this.onSuggestionSubmit} handleVoteChange={this.handleVoteChange} suggestions={this.state.suggestions} />;
+      return <SuggestionBox
+              onSuggestionSubmit={this.onSuggestionSubmit}
+              handleVoteChange={this.handleVoteChange}
+              handleRemove={this.handleRemove}
+              handleArchive={this.handleArchive}
+              suggestions={this.state.suggestions}
+              userRole={this.state.userRole}
+            />;
     } else if (this.state.loginStatus === LOGIN_STATUS.NOT_IN_ORG) {
       return <p>You need to be a member of the StevensCSC organization on GitHub for access. Please make a GitHub account and email your GitHub username to scsc@stevens.edu for access.</p>;
     } else {

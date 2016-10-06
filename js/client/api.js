@@ -53,6 +53,34 @@ export default class ServerAPI {
     });
   }
 
+  static getUserRole(onSuccess, onFailure) {
+    $.get({
+      url: API_URL + "getUserRole",
+      xhrFields: { withCredentials: true },
+      success: (data) => onSuccess(data),
+      error: (data) => onFailure(data)
+    });
+  }
+
+  static deleteSuggestion(id, onSuccess, onFailure) {
+    $.ajax({
+        url: API_URL + id + "/delete",
+        type: 'DELETE',
+        xhrFields: { withCredentials: true },
+        success: (data) => onSuccess(data),
+        error: (data) => onFailure(data)
+      });
+  }
+
+  static archiveSuggestion(id, onSuccess, onFailure) {
+    $.get({
+        url: API_URL + id + "/archive",
+        xhrFields: { withCredentials: true },
+        success: (data) => onSuccess(data),
+        error: (data) => onFailure(data)
+      });
+  }
+
   static logout(onSuccess, onFailure) {
     $.get({
       url: API_URL + "logout",

@@ -16,7 +16,11 @@ export default class SuggestionList extends React.Component {
           userUpvoted={suggestion.userupvoted}
           voteCount={suggestion.votes}
           key={suggestion.suggestion_id}
-          handleVoteChange={that.props.handleVoteChange} />
+          handleVoteChange={that.props.handleVoteChange}
+          handleRemove={that.props.handleRemove}
+          handleArchive={that.props.handleArchive}
+          userRole={that.props.userRole}
+        />
       );
     });
 

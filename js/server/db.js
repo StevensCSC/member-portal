@@ -6,8 +6,7 @@ var client;
 
 function getConfig() {
   if(process.env.NODE_ENV === 'production') {
-    pg.defaults.ssl = true;
-    return process.env.DATABASE_URL;
+    pg.defaults.ssl = true; return process.env.DATABASE_URL;
   } else {
     return {
       database: 'scsc_db',
@@ -89,5 +88,35 @@ export function resetVoteSuggestionForUser(suggestionId, userId) {
 
       resolve();
      });
+  });
+}
+
+export function deleteSuggestion(suggestionId) {
+  return new Promise((resolve, reject) => {
+    client.query("DELETE FROM suggestions WHERE suggestion_id = $1",
+      [suggestionId],
+      function (err, result) {
+        if (err) {
+          reject(err);
+        }
+
+        resolve();
+      });
+  });
+}
+
+export function archiveSuggestion(suggestionId) {
+  return new Promise((resolve, reject) => {
+    client.query("WITH moved_rows AS (" +
+                    "DELETE FROM suggestions WHERE suggestion_id = $1 RETURNING suggestions.*)" +
+                    "INSERT INTO archived_suggestions SELECT * FROM moved_rows;",
+      [suggestionId],
+      function (err, result) {
+        if (err) {
+          reject(err);
+        }
+
+        resolve();
+      });
   });
 }

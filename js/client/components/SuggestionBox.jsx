@@ -7,7 +7,13 @@ export default class SuggestionBox extends React.Component {
     render() {
     return (
       <div>
-        <SuggestionList suggestions={this.props.suggestions} handleVoteChange={this.props.handleVoteChange} />
+        <SuggestionList
+          suggestions={this.props.suggestions}
+          handleVoteChange={this.props.handleVoteChange}
+          handleRemove={this.props.handleRemove}
+          handleArchive={this.props.handleArchive}
+          userRole={this.props.userRole}
+        />
         <SuggestionForm onSuggestionSubmit={ this.props.onSuggestionSubmit }/>
       </div>
     );

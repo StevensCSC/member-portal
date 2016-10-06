@@ -58,8 +58,13 @@ app.use(session({
 app.use(express.static('./public'));
 
 // routes requiring authentication
-app.use(['/:id/upvote', '/:id/resetVote/', '/submit/', '/getSuggestionsForCurrentUser'],
+app.use(['/:id/upvote', '/:id/resetVote/', '/submit/', '/getSuggestionsForCurrentUser', '/getUserRole'],
   connectGithubOAuth.userInOrg('StevensCSC')
+);
+
+// routes requiring admin
+app.use(['/:id/delete', '/:id/archive'],
+  connectGithubOAuth.userIsAdmin('StevensCSC', 'E-Board')
 );
 
 // parse POST body
@@ -103,6 +108,46 @@ app.get('/:id/resetVote', function (req, res) {
     });
 });
 
+app.delete('/:id/delete', function (req, res) {
+  let id = req.params.id;
+  logger.info('User ' + req.session.github.username + ' deleting suggestion #' + id);
+  db.deleteSuggestion(id)
+    .then(() => {
+      db.getSuggestionsForUser(req.session.github.userId)
+        .then((result) => {
+          res.json(result);
+        })
+        .catch((err) => {
+          logger.info('Error getting suggestions for current user: ' + err);
+          res.json([]);
+        });
+    })
+    .catch((err) => {
+      logger.info('Error deleting suggestion #' + id);
+      res.json([]);
+    });
+});
+
+app.get('/:id/archive', function (req, res) {
+  let id = req.params.id;
+  logger.info('User ' + req.session.github.username + ' archiving suggestion #' + id);
+  db.archiveSuggestion(id)
+    .then(() => {
+      db.getSuggestionsForUser(req.session.github.userId)
+        .then((result) => {
+          res.json(result);
+        })
+        .catch((err) => {
+          logger.info('Error getting suggestions for current user: ' + err);
+          res.json([]);
+        });
+    })
+    .catch((err) => {
+      logger.info('Error archiving suggestion #' + id + ": " + err);
+      res.json([]);
+    });
+});
+
 app.post('/submit', function(req, res) {
   logger.info('User ' + req.session.github.username + ' submitting suggestion: ' + JSON.stringify(req.body));
   let suggestion = req.body;
@@ -142,6 +187,10 @@ app.get('/getSuggestionsForCurrentUser', function(req, res) {
       res.end('{}');
     });
 });
+
+app.get('/getUserRole',
+  connectGithubOAuth.userRole('StevensCSC', 'E-Board')
+);
 
 app.get('/callback', connectGithubOAuth.callback('/'));
 

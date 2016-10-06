@@ -28,39 +28,103 @@ export default class ConnectGithubOAuth {
     };
   }
 
+  authenticate (accessToken) {
+    this.github.authenticate({
+      type: 'oauth',
+      token: accessToken
+    });
+  }
+
+  ifAuthenticated (req, res, next, f) {
+    if (req.session.github &&  req.session.github.accessToken) {
+      this.authenticate(req.session.github.accessToken);
+      f();
+    } else {
+      res.status(401).send('NOT_LOGGED_IN');
+    }
+  }
+
   userInOrg(org) {
     let that = this;
 
     return (req, res, next) => {
-      if (!req.session.github || !req.session.github.accessToken) {
-        // user not authenticated
-        res.status(401).send();
-      } else {
-        that.github.authenticate({
-          type: 'oauth',
-          token: req.session.github.accessToken
-        });
-
-        that.github.users.get({}, function (err, usersResponse) {
-          if (err) {
-            res.status(500).send();
-          }
-          that.github.orgs.checkMembership({
-            org: org,
-            user: usersResponse.login
-          }, function (err, memershipResponse) {
+      that.ifAuthenticated (req, res, next,
+        () => {
+          that.github.users.get({}, function (err, usersResponse) {
             if (err) {
-              // user not in org
-              res.status(403).send();
+              res.status(500).send();
             } else {
-              // user is in org
-              req.session.github.username = usersResponse.login;
-              req.session.github.userId = usersResponse.id;
-              next();
+              that.github.orgs.checkMembership({
+                org: org,
+                user: usersResponse.login
+              }, function (err, memershipResponse) {
+                if (err) {
+                  // user not in org
+                  res.status(401).send('NOT_IN_ORG');
+                } else {
+                  // user is in org
+                  req.session.github.username = usersResponse.login;
+                  req.session.github.userId = usersResponse.id;
+                  next();
+                }
+              });
             }
           });
-        });
-      }
+        }
+      );
     };
   }
+
+  userIsAdmin(org, adminTeam) {
+    let that = this;
+
+    return (req, res, next) => {
+      that.ifAuthenticated (req, res, next,
+        () => {
+          that.github.users.getTeams({}, function (err, teamsResponse) {
+            if (err) {
+              res.status(500).send();
+            } else {
+              if (teamsResponse.some((item) => {
+                return item.name === adminTeam && item.organization.login === org;
+              })) {
+                next();
+              } else {
+                res.status(403).send();
+              }
+            }
+          });
+        }
+      );
+    };
+  }
+
+  userRole(org, adminTeam) {
+    let that = this;
+
+    return (req, res, next) => {
+      that.ifAuthenticated (req, res, next,
+        () => {
+          that.github.users.getTeams({}, function (err, teamsResponse) {
+            if (err) {
+              res.status(500).send();
+            } else {
+              if (teamsResponse.some((item) => {
+               return item.name === adminTeam && item.organization.login === org;
+              })) {
+                res.json({
+                  role: 'admin'
+                });
+              } else {
+                res.json({
+                  role: 'member'
+                });
+              }
+            }
+          });
+        }
+      );
+    };
+  }
+
 }
